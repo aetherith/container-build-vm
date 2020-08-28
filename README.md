@@ -15,8 +15,11 @@ be a model of how we can create containers outside or without the action of OKD.
 * To keep your VM and local development environment in sync you will also want
   to keep `vagrant rsync-auto` running while editing files so they are synced
   to and from the VM.
-* To actually build the container, log into the VM with `vagrant ssh` and
-  `sudo su` to the root user.
+* To actually build the container, log into the VM with `vagrant ssh` and use the
+  following to switch to the root user.
+  ```bash
+  $ deactivate && sudo su
+  ```
 * From there execute the following to build the container image:
   ```bash
   $ ansible-bender build /vagrant/provision/jnlp-container.yml

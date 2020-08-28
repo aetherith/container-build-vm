@@ -24,6 +24,7 @@
     bootstrap_pip_packages:
       - ansible==2.9.10
       - ansible-bender==0.8.1
+      - ansible-lint==4.3.3
       - selinux==0.2.1
   tasks:
     - name: Install virtualenv for Python3 with PIP.
@@ -36,13 +37,26 @@
         virtualenv: "{{ bootstrap_ansible_venv_path }}"
         virtualenv_command: "{{ bootstrap_ansible_venv_bin }}"
         state: present
+    - name: Set permissions on virtual environment so Vagrant user can install.
+      file:
+        path: "{{ bootstrap_ansible_venv_path }}"
+        group: vagrant
+        mode: g+w
+        recurse: yes
     - name: Make sure that virtual environment is activated by default.
       blockinfile:
-        path: "/root/.bashrc"
+        path: "{{ item }}"
         block: |
+          # Make sure any global BASH configuration is sourced.
           if [ -f /etc/bashrc ]; then
             . /etc/bashrc
           fi
-          source {{ bootstrap_ansible_venv_path }}/bin/activate
+          # Deactivate any other virtual environments.
+          type deactivate &>/dev/null && deactivate
+          # Activate the Ansible virtual environment
+          . {{ bootstrap_ansible_venv_path }}/bin/activate
         create: yes
         state: present
+      loop:
+        - "/root/.bashrc"
+        - "/home/vagrant/.bashrc"
