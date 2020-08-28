@@ -1,0 +1,51 @@
+- name: Install the Python3 base dependencies.
+  hosts: all
+  vars:
+    ansible_bender:
+      base_image: jnlp-centos-7-image
+
+      target_image:
+        name: builder-image
+        labels:
+          built-by: "{{ ansible_user }}"
+        entrypoint: jenkins-agent
+
+    container_yum_packages:
+      - python3
+      - python3-pip
+
+  tasks:
+    - name: Install required YUM packages.
+      package:
+        name: "{{ container_yum_packages }}"
+        state: present
+
+- name: Build the application container.
+  hosts: all
+  vars:
+    ansible_python_interpreter: "/usr/bin/python3"
+
+    container_pip_packages:
+      - ansible==2.9.10
+      - hvac==0.10.5
+      - openshift==0.11.2
+    container_venv_path: "/opt/ansible-virtualenv"
+
+  tasks:
+    - name: Install virtualenv for Python3 with PIP.
+      pip:
+        name: virtualenv
+        state: present
+    - name: Install required PIP packages
+      pip:
+        name: "{{ container_pip_packages }}"
+        virtualenv: "{{ container_venv_path }}"
+        virtualenv_python: python3
+        virtualenv_command: "/usr/local/bin/virtualenv"
+        state: present
+    - name: Patch the JNLP script to source the virtual environment.
+      blockinfile:
+        path: /usr/local/bin/jenkins-agent
+        insertafter: "^#!.*$"
+        block: |
+          . {{ container_venv_path }}/bin/activate

@@ -1,0 +1,47 @@
+---
+- name: Build JNLP base image.
+  hosts: all
+  vars:
+    ansible_bender:
+      base_image: centos:7
+
+      target_image:
+        name: jnlp-centos-7-image
+        working_dir: /home/{{ jenkins_user }}
+        user: "{{ jenkins_user }}"
+
+    jenkins_user: jenkins
+    jenkins_group: "{{ jenkins_user }}"
+    jenkins_user_uid: 1000
+    jenkins_group_gid: "{{ jenkins_user_uid }}"
+
+    container_yum_packages:
+      - git
+      - java-1.8.0-openjdk-headless
+
+  tasks:
+    - name: Install required YUM packages.
+      package:
+        name: "{{ container_yum_packages }}"
+        state: present
+    - name: Create the Jenkins group.
+      group:
+        name: "{{ jenkins_group }}"
+        gid: "{{ jenkins_group_gid }}"
+        state: present
+    - name: Create the Jenkins user.
+      user:
+        name: "{{ jenkins_user }}"
+        uid: "{{ jenkins_user_uid }}"
+        group: "{{ jenkins_group }}"
+        state: present
+    - name: Copy over the JNLP script.
+      copy:
+        src: jenkins-agent
+        dest: /usr/local/bin/jenkins-agent
+        mode: 0755
+    - name: Link the JNLP script to an alternate location.
+      file:
+        src: /usr/local/bin/jenkins-agent
+        path: /usr/local/bin/jenkins-slave
+        state: link

@@ -1,0 +1,48 @@
+---
+- name: Bootstrap the builder VM.
+  hosts: all
+  become: yes
+  vars:
+    bootstrap_yum_packages:
+      - buildah
+      - podman
+      - python3
+      - python3-pip
+      - python3-libselinux
+  tasks:
+    - name: Install required YUM packages.
+      package:
+        name: "{{ bootstrap_yum_packages }}"
+        state: present
+- name: Install Python dependencies.
+  hosts: all
+  become: yes
+  vars:
+    ansible_python_interpreter: "/usr/bin/python3"
+    bootstrap_ansible_venv_bin: "/usr/local/bin/virtualenv"
+    bootstrap_ansible_venv_path: "/opt/ansible-virtualenv"
+    bootstrap_pip_packages:
+      - ansible==2.9.10
+      - ansible-bender==0.8.1
+      - selinux==0.2.1
+  tasks:
+    - name: Install virtualenv for Python3 with PIP.
+      pip:
+        name: virtualenv
+        state: present
+    - name: Install required PIP packages.
+      pip:
+        name: "{{ bootstrap_pip_packages }}"
+        virtualenv: "{{ bootstrap_ansible_venv_path }}"
+        virtualenv_command: "{{ bootstrap_ansible_venv_bin }}"
+        state: present
+    - name: Make sure that virtual environment is activated by default.
+      blockinfile:
+        path: "/root/.bashrc"
+        block: |
+          if [ -f /etc/bashrc ]; then
+            . /etc/bashrc
+          fi
+          source {{ bootstrap_ansible_venv_path }}/bin/activate
+        create: yes
+        state: present
