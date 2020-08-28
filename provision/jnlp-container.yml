@@ -5,6 +5,9 @@
     ansible_bender:
       base_image: centos:7
 
+      working_container:
+        user: root
+
       target_image:
         name: jnlp-centos-7-image
         working_dir: /home/{{ jenkins_user }}

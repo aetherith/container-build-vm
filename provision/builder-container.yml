@@ -4,6 +4,9 @@
     ansible_bender:
       base_image: jnlp-centos-7-image
 
+      working_container:
+        user: root
+
       target_image:
         name: builder-image
         labels:
@@ -22,6 +25,7 @@
 
 - name: Build the application container.
   hosts: all
+  become: yes
   vars:
     ansible_python_interpreter: "/usr/bin/python3"
 
