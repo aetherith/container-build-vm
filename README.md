@@ -7,7 +7,6 @@ be a model of how we can create containers outside or without the action of OKD.
 ## Requirements
 * Vagrant
 * VirtualBox
-* Ansible
 
 ## Process
 * Bring a new VM up and let it configure using `vagrant up`. If you want to see
